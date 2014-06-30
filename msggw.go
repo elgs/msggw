@@ -9,12 +9,21 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
 func main() {
 	args := args()
 	ds := args[0]
+	for {
+		work(ds)
+		time.Sleep(time.Second)
+	}
+
+}
+
+var work = func(ds string) {
 	sqlSelect := `SELECT ID,BODY,PROPERTIES FROM messages 
 	WHERE RECEIVER=? AND SUBJECT=? AND HAS_READ=? LIMIT 1`
 	msg := queryDb(ds, sqlSelect, "-1", "MSG_DOWN", 0)
