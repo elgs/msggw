@@ -25,8 +25,8 @@ func main() {
 
 var work = func(ds string) {
 	sqlSelect := `SELECT ID,BODY,PROPERTIES FROM messages 
-	WHERE RECEIVER=? AND SUBJECT=? AND HAS_READ=? LIMIT 1`
-	msg := queryDb(ds, sqlSelect, "-1", "MSG_DOWN", 0)
+	WHERE SENDER=? AND RECEIVER=? AND SUBJECT=? AND HAS_READ=? LIMIT 1`
+	msg := queryDb(ds, sqlSelect, "-1", "-1", "MSG_DOWN", 0)
 	var properties map[string]interface{}
 	msgId := msg[0]
 	msgBody := msg[1]
