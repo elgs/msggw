@@ -63,7 +63,7 @@ var getConn = func(ds string) (*sql.DB, error) {
 
 func args() []string {
 	ret := []string{}
-	if len(os.Args) != 4 {
+	if len(os.Args) != 2 {
 		fmt.Println("Usage: msggw ds")
 		os.Exit(1)
 	} else {
