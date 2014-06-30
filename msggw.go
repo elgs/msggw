@@ -35,6 +35,7 @@ var work = func(ds string) {
 	receivers := properties["receivers"]
 	receiverArray, _ := receivers.([]interface{})
 	for _, phoneNumber := range receiverArray {
+		fmt.Println(time.Now(), phoneNumber, msgBody)
 		command := fmt.Sprint("/usr/bin/gammu sendsms TEXT ", phoneNumber, " -unicode -text '", msgBody, "'")
 		out, err := exec.Command("sh", "-c", command).Output()
 		if err != nil {
