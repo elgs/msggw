@@ -61,9 +61,9 @@ var sendSms = func(phoneNumber string, message string) {
 	if !strings.HasPrefix(phoneNumber, "+") {
 		phoneNumber = fmt.Sprint("+86", phoneNumber)
 	}
-	message = strings.Replace(message, "'", "\\'", -1)
+	message = strings.Replace(message, "\"", "\\\"", -1)
 	fmt.Println(time.Now(), phoneNumber, message)
-	command := fmt.Sprint("/usr/bin/gammu sendsms TEXT ", phoneNumber, " -unicode -text '", message, "'")
+	command := fmt.Sprint("/usr/bin/gammu sendsms TEXT ", phoneNumber, " -unicode -text \"", message, "\"")
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		fmt.Println("Failed to execute:", err)
