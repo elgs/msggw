@@ -7,7 +7,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"os"
-	//"os/exec"
+	"os/exec"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -62,6 +62,7 @@ var sendSms = func(phoneNumber string, message string) {
 	if err != nil {
 		fmt.Println("Failed to execute:", err)
 	}
+	fmt.Printf("%s\n", out)
 }
 
 var getConn = func(ds string) (*sql.DB, error) {
