@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -48,19 +49,21 @@ var workDown = func(ds string) {
 
 var workUp = func(ds string) {
 	sms := getAllSms()
-	for _, v := range sms {
+	for key, v := range sms {
 		msgId, _ := uuid.NewV4()
 		queryDb(ds, `INSERT INTO messages SET ID=?,SENDER=?,SENDER_CODE=?,SENDER_NAME=?,
 		RECEIVER=?,RECEIVER_CODE=?,RECEIVER_NAME=?,SUBJECT=?,BODY=?,TIME_CREATED=?,HAS_READ=0,
-		PROPERTIES='{}',CORRELATION_ID=''`, msgId, "-1", "syhstem", "系统",
+		PROPERTIES='{}',CORRELATION_ID=''`, msgId.String(), "-1", "syhstem", "系统",
 			"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
+
+		command := fmt.Sprint("/usr/bin/gammu deletesms 1 ", key)
+		out, err := exec.Command("sh", "-c", command).Output()
+		if err != nil {
+			fmt.Println("Failed to execute:", err)
+		}
+		fmt.Printf("%s\n", out)
 	}
 
-	command := fmt.Sprint("/usr/bin/gammu deleteallsms 1")
-	_, err := exec.Command("sh", "-c", command).Output()
-	if err != nil {
-		fmt.Println("Failed to execute:", err)
-	}
 }
 
 var sendSms = func(phoneNumber string, message string) {
@@ -86,7 +89,7 @@ var sendSms = func(phoneNumber string, message string) {
 	fmt.Printf("%s\n", out)
 }
 
-var getAllSms = func() []string {
+var getAllSms = func() map[int]string {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("Failed to send:", err)
@@ -99,22 +102,36 @@ var getAllSms = func() []string {
 		fmt.Println("Failed to execute:", err)
 	}
 	data := fmt.Sprintf("%s\n", out)
-	fmt.Println(data)
 	return splitUpSms(data)
 }
 
-var splitUpSms = func(s string) (ret []string) {
+var splitUpSms = func(s string) map[int]string {
+	ret := make(map[int]string)
+
 	regReplace := regexp.MustCompile("(?m)^\\d+ SMS parts in \\d+ SMS sequences$")
 	s = regReplace.ReplaceAllString(s, "")
-	reg := regexp.MustCompile("(?m)^Location \\d+, folder \"Inbox\", SIM memory, Inbox folder\n$")
-	data := reg.Split(s, -1)
-	for _, v := range data {
+
+	reg := regexp.MustCompile("(?m)^Location\\s")
+	values := reg.Split(s, -1)
+
+	for _, v := range values {
 		v = strings.TrimSpace(v)
 		if len(v) > 0 {
-			ret = append(ret, v)
+			key := captureSmsLocation(v)
+			reg := regexp.MustCompile("^(?m)\\d+, folder \"Inbox\", SIM memory, Inbox folder$")
+			v = reg.ReplaceAllString(v, "")
+			v = strings.TrimSpace(v)
+			ret[key] = v
 		}
 	}
-	return
+	return ret
+}
+
+var captureSmsLocation = func(s string) int {
+	reg := regexp.MustCompile("^\\d+")
+	values := reg.FindAllString(s, -1)
+	ret, _ := strconv.Atoi(values[0])
+	return ret
 }
 
 var getConn = func(ds string) (*sql.DB, error) {
@@ -159,7 +176,10 @@ var queryDb = func(ds string, sqlStatement string, sqlParams ...interface{}) (re
 			}
 		}
 	} else {
-		db.Exec(sqlStatement, sqlParams...)
+		_, err := db.Exec(sqlStatement, sqlParams...)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return
 }
