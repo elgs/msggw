@@ -17,13 +17,14 @@ func main() {
 	args := args()
 	ds := args[0]
 	for {
-		work(ds)
+		workDown(ds)
+		workUp(ds)
 		time.Sleep(time.Second)
 	}
 
 }
 
-var work = func(ds string) {
+var workDown = func(ds string) {
 	sqlSelect := `SELECT ID,BODY,PROPERTIES FROM messages 
 	WHERE SENDER=? AND RECEIVER=? AND SUBJECT=? AND HAS_READ=? LIMIT 1`
 	msg := queryDb(ds, sqlSelect, "-1", "-1", "MSG_DOWN", 0)
@@ -43,6 +44,10 @@ var work = func(ds string) {
 	queryDb(ds, `UPDATE messages SET HAS_READ=HAS_READ+1 WHERE HAS_READ=0 AND ID=?`, msgId)
 }
 
+var workUp = func(ds string) {
+
+}
+
 var sendSms = func(phoneNumber string, message string) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -56,6 +61,7 @@ var sendSms = func(phoneNumber string, message string) {
 	if !strings.HasPrefix(phoneNumber, "+") {
 		phoneNumber = fmt.Sprint("+86", phoneNumber)
 	}
+	message = strings.Replace(message, "'", "\\'", -1)
 	fmt.Println(time.Now(), phoneNumber, message)
 	command := fmt.Sprint("/usr/bin/gammu sendsms TEXT ", phoneNumber, " -unicode -text '", message, "'")
 	out, err := exec.Command("sh", "-c", command).Output()
