@@ -7,7 +7,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"os"
-	"os/exec"
+	//"os/exec"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -29,19 +29,16 @@ var work = func(ds string) {
 	msg := queryDb(ds, sqlSelect, "-1", "-1", "MSG_DOWN", 0)
 	var properties map[string]interface{}
 	msgId := msg[0]
+	if len(msgId) == 0 {
+		return
+	}
 	msgBody := msg[1]
 	msgProperties := msg[2]
 	json.Unmarshal([]byte(msgProperties), &properties)
 	receivers := properties["receivers"]
 	receiverArray, _ := receivers.([]interface{})
 	for _, phoneNumber := range receiverArray {
-		fmt.Println(time.Now(), phoneNumber, msgBody)
-		command := fmt.Sprint("/usr/bin/gammu sendsms TEXT ", phoneNumber, " -unicode -text '", msgBody, "'")
-		out, err := exec.Command("sh", "-c", command).Output()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Printf("%s\n", out)
+		sendSms(phoneNumber.(string), msgBody)
 	}
 	queryDb(ds, `UPDATE messages SET HAS_READ=HAS_READ+1 WHERE HAS_READ=0 AND ID=?`, msgId)
 }
@@ -59,12 +56,12 @@ var sendSms = func(phoneNumber string, message string) {
 	if !strings.HasPrefix(phoneNumber, "+") {
 		phoneNumber = fmt.Sprint("+86", phoneNumber)
 	}
+	fmt.Println(time.Now(), phoneNumber, message)
 	command := fmt.Sprint("/usr/bin/gammu sendsms TEXT ", phoneNumber, " -unicode -text '", message, "'")
-	out, err := exec.Command("sh", "-c", command).CombinedOutput()
+	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		fmt.Println("Failed to execute:", err)
 	}
-	fmt.Printf("gammu output: ", string(out))
 }
 
 var getConn = func(ds string) (*sql.DB, error) {
