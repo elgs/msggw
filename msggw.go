@@ -45,7 +45,16 @@ var workDown = func(ds string) {
 }
 
 var workUp = func(ds string) {
+	sms := getAllSms()
+	for _, v := range sms {
+		queryDb(ds, `INSERT INTO messages SET HAS_READ=HAS_READ+1 WHERE HAS_READ=0 AND ID=?`, msgId)
+	}
 
+	command := fmt.Sprint("/usr/bin/gammu deleteallsms 1")
+	out, err := exec.Command("sh", "-c", command).Output()
+	if err != nil {
+		fmt.Println("Failed to execute:", err)
+	}
 }
 
 var sendSms = func(phoneNumber string, message string) {
@@ -85,7 +94,21 @@ var getAllSms = func() []string {
 	}
 	data := fmt.Sprintf("%s\n", out)
 	fmt.Println(data)
-	return nil
+	return splitUpSms(data)
+}
+
+var splitUpSms = func(s string) (ret []string) {
+	regReplace := regexp.MustCompile("(?m)^\\d+ SMS parts in \\d+ SMS sequences$")
+	s = regReplace.ReplaceAllString(s, "")
+	reg := regexp.MustCompile("(?m)^Location \\d+, folder \"Inbox\", SIM memory, Inbox folder\n$")
+	data := reg.Split(s, -1)
+	for _, v := range data {
+		v = strings.TrimSpace(v)
+		if len(v) > 0 {
+			ret = append(ret, v)
+		}
+	}
+	return
 }
 
 var getConn = func(ds string) (*sql.DB, error) {
