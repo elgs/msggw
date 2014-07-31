@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/nu7hatch/gouuid"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -47,11 +49,15 @@ var workDown = func(ds string) {
 var workUp = func(ds string) {
 	sms := getAllSms()
 	for _, v := range sms {
-		queryDb(ds, `INSERT INTO messages SET HAS_READ=HAS_READ+1 WHERE HAS_READ=0 AND ID=?`, msgId)
+		msgId, _ := uuid.NewV4()
+		queryDb(ds, `INSERT INTO messages SET ID=?,SENDER=?,SENDER_CODE=?,SENDER_NAME=?,
+		RECEIVER=?,RECEIVER_CODE=?,RECEIVER_NAME=?,SUBJECT=?,BODY=?,TIME_CREATED=?,HAS_READ=0,
+		PROPERTIES='{}',CORRELATION_ID=''`, msgId, "-1", "syhstem", "系统",
+			"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
 	}
 
 	command := fmt.Sprint("/usr/bin/gammu deleteallsms 1")
-	out, err := exec.Command("sh", "-c", command).Output()
+	_, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		fmt.Println("Failed to execute:", err)
 	}
