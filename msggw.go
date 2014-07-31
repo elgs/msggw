@@ -83,8 +83,9 @@ var getAllSms = func() []string {
 	if err != nil {
 		fmt.Println("Failed to execute:", err)
 	}
-	data := fmt.SPrintf("%s\n", out)
+	data := fmt.Sprintf("%s\n", out)
 	fmt.Println(data)
+	return nil
 }
 
 var getConn = func(ds string) (*sql.DB, error) {
