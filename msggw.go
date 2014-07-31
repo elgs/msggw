@@ -71,6 +71,22 @@ var sendSms = func(phoneNumber string, message string) {
 	fmt.Printf("%s\n", out)
 }
 
+var getAllSms = func() []string {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Failed to send:", err)
+		}
+	}()
+
+	command := fmt.Sprint("/usr/bin/gammu getallsms")
+	out, err := exec.Command("sh", "-c", command).Output()
+	if err != nil {
+		fmt.Println("Failed to execute:", err)
+	}
+	data := fmt.SPrintf("%s\n", out)
+	fmt.Println(data)
+}
+
 var getConn = func(ds string) (*sql.DB, error) {
 	return sql.Open("mysql", ds)
 }
