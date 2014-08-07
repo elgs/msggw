@@ -67,11 +67,10 @@ var workUp = func(ds string) {
 			"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
 
 		command := fmt.Sprint("/usr/bin/gammu deletesms 1 ", key)
-		out, err := exec.Command("sh", "-c", command).Output()
+		_, err := exec.Command("sh", "-c", command).Output()
 		if err != nil {
 			fmt.Println("Failed to execute:", err)
 		}
-		fmt.Printf("%s\n", out)
 	}
 
 }
