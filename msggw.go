@@ -28,6 +28,11 @@ func main() {
 }
 
 var workDown = func(ds string) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Failed to send:", err)
+		}
+	}()
 	sqlSelect := `SELECT ID,BODY,PROPERTIES FROM messages 
 	WHERE SENDER=? AND RECEIVER=? AND SUBJECT=? AND HAS_READ=? LIMIT 1`
 	msg := queryDb(ds, sqlSelect, "-1", "-1", "MSG_DOWN", 0)
@@ -48,6 +53,11 @@ var workDown = func(ds string) {
 }
 
 var workUp = func(ds string) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Failed to send:", err)
+		}
+	}()
 	sms := getAllSms()
 	for key, v := range sms {
 		msgId, _ := uuid.NewV4()
@@ -106,6 +116,11 @@ var getAllSms = func() map[int]string {
 }
 
 var splitUpSms = func(s string) map[int]string {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Failed to send:", err)
+		}
+	}()
 	ret := make(map[int]string)
 
 	regReplace := regexp.MustCompile("(?m)^\\d+ SMS parts in \\d+ SMS sequences$")
@@ -128,6 +143,11 @@ var splitUpSms = func(s string) map[int]string {
 }
 
 var captureSmsLocation = func(s string) int {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Failed to send:", err)
+		}
+	}()
 	reg := regexp.MustCompile("^\\d+")
 	values := reg.FindAllString(s, -1)
 	ret, _ := strconv.Atoi(values[0])
@@ -152,6 +172,11 @@ func args() []string {
 }
 
 var queryDb = func(ds string, sqlStatement string, sqlParams ...interface{}) (result []string) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Failed to send:", err)
+		}
+	}()
 	db, _ := getConn(ds)
 	defer db.Close()
 
