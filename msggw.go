@@ -18,11 +18,11 @@ import (
 
 func main() {
 	args := args()
-	gammurc := args[0]
+	gammu := args[0]
 	ds := args[1]
 	for {
-		workDown(gammurc, ds)
-		workUp(gammurc, ds)
+		workDown(gammu, ds)
+		workUp(gammu, ds)
 		time.Sleep(time.Second)
 	}
 
