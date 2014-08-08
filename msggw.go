@@ -18,16 +18,17 @@ import (
 
 func main() {
 	args := args()
-	ds := args[0]
+	gammurc := args[0]
+	ds := args[1]
 	for {
-		workDown(ds)
-		workUp(ds)
+		workDown(gammurc, ds)
+		workUp(gammurc, ds)
 		time.Sleep(time.Second)
 	}
 
 }
 
-var workDown = func(ds string) {
+var workDown = func(gammurc, ds string) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("Failed to send:", err)
@@ -47,18 +48,18 @@ var workDown = func(ds string) {
 	receivers := properties["receivers"]
 	receiverArray, _ := receivers.([]interface{})
 	for _, phoneNumber := range receiverArray {
-		sendSms(phoneNumber.(string), msgBody)
+		sendSms(gammurc, phoneNumber.(string), msgBody)
 	}
 	queryDb(ds, `UPDATE messages SET HAS_READ=HAS_READ+1 WHERE HAS_READ=0 AND ID=?`, msgId)
 }
 
-var workUp = func(ds string) {
+var workUp = func(gammurc, ds string) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("Failed to send:", err)
 		}
 	}()
-	sms := getAllSms()
+	sms := getAllSms(gammurc)
 	for key, v := range sms {
 		msgId, _ := uuid.NewV4()
 		queryDb(ds, `INSERT INTO messages SET ID=?,SENDER=?,SENDER_CODE=?,SENDER_NAME=?,
@@ -66,7 +67,7 @@ var workUp = func(ds string) {
 		PROPERTIES='{}',CORRELATION_ID=''`, msgId.String(), "-1", "syhstem", "系统",
 			"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
 
-		command := fmt.Sprint("/usr/bin/gammu deletesms 1 ", key)
+		command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " deletesms 1 ", key)
 		_, err := exec.Command("sh", "-c", command).Output()
 		if err != nil {
 			fmt.Println("Failed to execute:", err)
@@ -75,7 +76,7 @@ var workUp = func(ds string) {
 
 }
 
-var sendSms = func(phoneNumber string, message string) {
+var sendSms = func(gammurc string, phoneNumber string, message string) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("Failed to send:", err)
@@ -90,7 +91,7 @@ var sendSms = func(phoneNumber string, message string) {
 	}
 	message = strings.Replace(message, "\"", "\\\"", -1)
 	fmt.Println(time.Now(), phoneNumber, message)
-	command := fmt.Sprint("/usr/bin/gammu sendsms TEXT ", phoneNumber, " -unicode -text \"", message, "\"")
+	command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " sendsms TEXT ", phoneNumber, " -unicode -text \"", message, "\"")
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		fmt.Println("Failed to execute:", err)
@@ -98,14 +99,14 @@ var sendSms = func(phoneNumber string, message string) {
 	fmt.Printf("%s\n", out)
 }
 
-var getAllSms = func() map[int]string {
+var getAllSms = func(gammurc string) map[int]string {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("Failed to send:", err)
 		}
 	}()
 
-	command := fmt.Sprint("/usr/bin/gammu getallsms")
+	command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " getallsms")
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		fmt.Println("Failed to execute:", err)
@@ -159,8 +160,8 @@ var getConn = func(ds string) (*sql.DB, error) {
 
 func args() []string {
 	ret := []string{}
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: msggw ds")
+	if len(os.Args) != 3 {
+		fmt.Println("Usage: msggw gammurc ds")
 		os.Exit(1)
 	} else {
 		for i := 1; i < len(os.Args); i++ {
