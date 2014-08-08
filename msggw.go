@@ -31,12 +31,12 @@ func main() {
 var workDown = func(gammu, ds string) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Failed to send:", err)
+			fmt.Println(err)
 		}
 	}()
 	sqlSelect := `SELECT ID,BODY,PROPERTIES FROM messages 
 	WHERE SENDER=? AND RECEIVER=? AND SUBJECT=? AND HAS_READ=? LIMIT 1`
-	msg := queryDb(ds, sqlSelect, "-1", "-1", "MSG_DOWN", 0)
+	msg := queryDb(ds, sqlSelect, "-1", "-1", "MSG_DOWN", 0)[0]
 	var properties map[string]interface{}
 	msgId := msg[0]
 	if len(msgId) == 0 {
@@ -56,7 +56,7 @@ var workDown = func(gammu, ds string) {
 var workUp = func(gammu, ds string) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Failed to send:", err)
+			fmt.Println(err)
 		}
 	}()
 	sms := getAllSms(gammu)
@@ -79,7 +79,7 @@ var workUp = func(gammu, ds string) {
 var sendSms = func(gammu string, phoneNumber string, message string) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Failed to send:", err)
+			fmt.Println(err)
 		}
 	}()
 	if utf8.RuneCountInString(phoneNumber) != 11 {
@@ -102,7 +102,7 @@ var sendSms = func(gammu string, phoneNumber string, message string) {
 var getAllSms = func(gammu string) map[int]string {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Failed to send:", err)
+			fmt.Println(err)
 		}
 	}()
 
@@ -118,7 +118,7 @@ var getAllSms = func(gammu string) map[int]string {
 var splitUpSms = func(s string) map[int]string {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Failed to send:", err)
+			fmt.Println(err)
 		}
 	}()
 	ret := make(map[int]string)
@@ -145,7 +145,7 @@ var splitUpSms = func(s string) map[int]string {
 var captureSmsLocation = func(s string) int {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Failed to send:", err)
+			fmt.Println(err)
 		}
 	}()
 	reg := regexp.MustCompile("^\\d+")
@@ -171,26 +171,33 @@ func args() []string {
 	return ret
 }
 
-var queryDb = func(ds string, sqlStatement string, sqlParams ...interface{}) (result []string) {
+var queryDb = func(ds string, sqlStatement string, sqlParams ...interface{}) (results [][]string) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Failed to send:", err)
+			fmt.Println(err)
 		}
 	}()
-	db, _ := getConn(ds)
+	db, err := getConn(ds)
 	defer db.Close()
+	if err != nil {
+		fmt.Println("sql.Open:", err)
+	}
 
 	if strings.HasPrefix(strings.ToUpper(sqlStatement), "SELECT") {
-		rows, _ := db.Query(sqlStatement, sqlParams...)
+		rows, err := db.Query(sqlStatement, sqlParams...)
+		if err != nil {
+			fmt.Println("db.Query:", err)
+		}
 		cols, _ := rows.Columns()
 		rawResult := make([][]byte, len(cols))
-		result = make([]string, len(cols))
+
 		dest := make([]interface{}, len(cols)) // A temporary interface{} slice
 		for i, _ := range rawResult {
 			dest[i] = &rawResult[i] // Put pointers to each string in the interface slice
 		}
 
-		if rows.Next() {
+		for rows.Next() {
+			result := make([]string, len(cols))
 			rows.Scan(dest...)
 			for i, raw := range rawResult {
 				if raw == nil {
@@ -199,6 +206,7 @@ var queryDb = func(ds string, sqlStatement string, sqlParams ...interface{}) (re
 					result[i] = string(raw)
 				}
 			}
+			results = append(results, result)
 		}
 	} else {
 		_, err := db.Exec(sqlStatement, sqlParams...)
