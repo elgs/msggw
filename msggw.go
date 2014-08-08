@@ -67,7 +67,7 @@ var workUp = func(gammurc, ds string) {
 		PROPERTIES='{}',CORRELATION_ID=''`, msgId.String(), "-1", "syhstem", "系统",
 			"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
 
-		command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " deletesms 1 ", key)
+		command := fmt.Sprint("/usr/local/bin/gammu -c ", gammurc, " deletesms 1 ", key)
 		_, err := exec.Command("sh", "-c", command).Output()
 		if err != nil {
 			fmt.Println("Failed to execute:", err, command)
@@ -91,7 +91,7 @@ var sendSms = func(gammurc string, phoneNumber string, message string) {
 	}
 	message = strings.Replace(message, "\"", "\\\"", -1)
 	fmt.Println(time.Now(), phoneNumber, message)
-	command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " sendsms TEXT ", phoneNumber, " -unicode -text \"", message, "\"")
+	command := fmt.Sprint("/usr/local/bin/gammu -c ", gammurc, " sendsms TEXT ", phoneNumber, " -unicode -text \"", message, "\"")
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		fmt.Println("Failed to execute:", err, command)
@@ -106,7 +106,7 @@ var getAllSms = func(gammurc string) map[int]string {
 		}
 	}()
 
-	command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " getallsms")
+	command := fmt.Sprint("/usr/local/bin/gammu -c ", gammurc, " getallsms")
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		fmt.Println("Failed to execute:", err, command)
