@@ -70,7 +70,7 @@ var workUp = func(gammurc, ds string) {
 		command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " deletesms 1 ", key)
 		_, err := exec.Command("sh", "-c", command).Output()
 		if err != nil {
-			fmt.Println("Failed to execute:", err)
+			fmt.Println("Failed to execute:", err, command)
 		}
 	}
 
@@ -94,7 +94,7 @@ var sendSms = func(gammurc string, phoneNumber string, message string) {
 	command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " sendsms TEXT ", phoneNumber, " -unicode -text \"", message, "\"")
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
-		fmt.Println("Failed to execute:", err)
+		fmt.Println("Failed to execute:", err, command)
 	}
 	fmt.Printf("%s\n", out)
 }
@@ -109,7 +109,7 @@ var getAllSms = func(gammurc string) map[int]string {
 	command := fmt.Sprint("/usr/bin/gammu -c ", gammurc, " getallsms")
 	out, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
-		fmt.Println("Failed to execute:", err)
+		fmt.Println("Failed to execute:", err, command)
 	}
 	data := fmt.Sprintf("%s\n", out)
 	return splitUpSms(data)
