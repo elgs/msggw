@@ -18,17 +18,42 @@ import (
 
 func main() {
 	args := args()
+	lenArgs := len(args)
 	gammu := args[0]
-	ds := args[1]
+	configs := args[1 : lenArgs-2]
+	lenConfigs := len(configs)
+	ds := args[lenArgs-1]
+	c := make(chan int, lenConfigs)
 	for {
-		workDown(gammu, ds)
-		workUp(gammu, ds)
-		time.Sleep(time.Second)
+		msgs := loadDown(lenConfigs, ds)
+		for index, config := range configs {
+			go work(gammu, config, msgs[index], ds, c)
+		}
+		for i := 0; i < lenConfigs; i++ {
+			<-c
+		}
 	}
-
 }
 
-var workDown = func(gammu, ds string) {
+var work = func(gammu string, config string, msg []string, ds string, c chan int) {
+	workDown(gammu, config, ds)
+	workUp(gammu, config, ds)
+	c <- 1
+}
+
+var loadDown = func(lenConfigs int, ds string) [][]string {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+	sqlSelect := `SELECT ID,BODY,PROPERTIES FROM messages 
+	WHERE SENDER=? AND RECEIVER=? AND SUBJECT=? AND HAS_READ=? LIMIT ?`
+	msgs := queryDb(ds, sqlSelect, "-1", "-1", "MSG_DOWN", 0, lenConfigs)
+	return msgs
+}
+
+var workDown = func(gammu, config, ds string) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println(err)
@@ -53,7 +78,7 @@ var workDown = func(gammu, ds string) {
 	queryDb(ds, `UPDATE messages SET HAS_READ=HAS_READ+1 WHERE HAS_READ=0 AND ID=?`, msgId)
 }
 
-var workUp = func(gammu, ds string) {
+var workUp = func(gammu, config, ds string) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println(err)
@@ -160,8 +185,8 @@ var getConn = func(ds string) (*sql.DB, error) {
 
 func args() []string {
 	ret := []string{}
-	if len(os.Args) != 3 {
-		fmt.Println("Usage: msggw gammurc ds")
+	if len(os.Args) < 4 {
+		fmt.Println("Usage: msggw config0, config1... ds")
 		os.Exit(1)
 	} else {
 		for i := 1; i < len(os.Args); i++ {
