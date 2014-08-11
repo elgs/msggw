@@ -40,6 +40,7 @@ func main() {
 }
 
 var work = func(gammu string, config string, msg []string, ds string, c chan int) {
+	fmt.Println(msg)
 	if len(msg) > 0 {
 		workDown(gammu, config, msg, ds)
 	}
