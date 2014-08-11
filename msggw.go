@@ -20,7 +20,7 @@ func main() {
 	args := args()
 	lenArgs := len(args)
 	gammu := args[0]
-	configs := args[1 : lenArgs-2]
+	configs := args[1 : lenArgs-1]
 	lenConfigs := len(configs)
 	ds := args[lenArgs-1]
 	ptrConfig := 0
