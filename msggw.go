@@ -23,13 +23,17 @@ func main() {
 	configs := args[1 : lenArgs-2]
 	lenConfigs := len(configs)
 	ds := args[lenArgs-1]
+	ptrConfig := 0
 	c := make(chan int, lenConfigs)
 	for {
 		msgs := loadDown(lenConfigs, ds)
-		for index, config := range configs {
+		currentConfig := ptrConfig
+		for index := 0; index < lenConfigs; index++ {
+			config := configs[(currentConfig+index)%lenConfigs]
 			var msg []string
 			if index < len(msgs) {
 				msg = msgs[index]
+				ptrConfig++
 			}
 			go work(gammu, config, msg, ds, c)
 		}
