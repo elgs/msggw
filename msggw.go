@@ -27,7 +27,11 @@ func main() {
 	for {
 		msgs := loadDown(lenConfigs, ds)
 		for index, config := range configs {
-			go work(gammu, config, msgs[index], ds, c)
+			var msg []string
+			if index < len(msgs)-1 {
+				msg = msgs[index]
+			}
+			go work(gammu, config, msg, ds, c)
 		}
 		for i := 0; i < lenConfigs; i++ {
 			<-c
@@ -36,7 +40,9 @@ func main() {
 }
 
 var work = func(gammu string, config string, msg []string, ds string, c chan int) {
-	workDown(gammu, config, msg, ds)
+	if len(msg) > 0 {
+		workDown(gammu, config, msg, ds)
+	}
 	workUp(gammu, config, ds)
 	c <- 1
 }
