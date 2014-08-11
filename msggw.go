@@ -27,6 +27,7 @@ func main() {
 	c := make(chan int, lenConfigs)
 	for {
 		msgs := loadDown(lenConfigs, ds)
+		ptrConfig = ptrConfig % lenConfigs
 		currentConfig := ptrConfig
 		for index := 0; index < lenConfigs; index++ {
 			config := configs[(currentConfig+index)%lenConfigs]
