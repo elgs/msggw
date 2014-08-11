@@ -28,7 +28,7 @@ func main() {
 		msgs := loadDown(lenConfigs, ds)
 		for index, config := range configs {
 			var msg []string
-			if index < len(msgs)-1 {
+			if index < len(msgs) {
 				msg = msgs[index]
 			}
 			go work(gammu, config, msg, ds, c)
@@ -40,7 +40,6 @@ func main() {
 }
 
 var work = func(gammu string, config string, msg []string, ds string, c chan int) {
-	fmt.Println(msg)
 	if len(msg) > 0 {
 		workDown(gammu, config, msg, ds)
 	}
