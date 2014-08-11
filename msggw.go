@@ -92,7 +92,7 @@ var workUp = func(gammu, config, ds string) {
 		msgId, _ := uuid.NewV4()
 		queryDb(ds, `INSERT INTO messages SET ID=?,SENDER=?,SENDER_CODE=?,SENDER_NAME=?,
 		RECEIVER=?,RECEIVER_CODE=?,RECEIVER_NAME=?,SUBJECT=?,BODY=?,TIME_CREATED=?,HAS_READ=0,
-		PROPERTIES='{}',CORRELATION_ID=''`, msgId.String(), "-1", "syhstem", "系统",
+		PROPERTIES='{}',CORRELATION_ID=''`, msgId.String(), "-1", "system", "系统",
 			"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
 
 		command := fmt.Sprint(gammu, " -c ", config, "  deletesms 1 ", key)
