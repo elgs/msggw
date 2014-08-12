@@ -94,6 +94,9 @@ var workUp = func(gammu, config, ds string) {
 	}()
 	sms := getAllSms(gammu, config)
 	for key, v := range sms {
+		if strings.Contains(v, "User Data Header     :") {
+			continue
+		}
 		msgId, _ := uuid.NewV4()
 		queryDb(ds, `INSERT INTO messages SET ID=?,SENDER=?,SENDER_CODE=?,SENDER_NAME=?,
 		RECEIVER=?,RECEIVER_CODE=?,RECEIVER_NAME=?,SUBJECT=?,BODY=?,TIME_CREATED=?,HAS_READ=0,
@@ -166,7 +169,7 @@ var splitUpSms = func(s string) map[int]string {
 		v = strings.TrimSpace(v)
 		if len(v) > 0 {
 			key := captureSmsLocation(v)
-			reg := regexp.MustCompile("^(?m)\\d+, folder \"Inbox\", SIM memory, Inbox folder$")
+			reg := regexp.MustCompile("^(?m)\\d+, folder \"Inbox\", (SIM|phone) memory, Inbox folder$")
 			v = reg.ReplaceAllString(v, "")
 			v = strings.TrimSpace(v)
 			ret[key] = v
