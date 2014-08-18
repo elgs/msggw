@@ -2,11 +2,11 @@
 package main
 
 import (
+	"code.google.com/p/go-uuid/uuid"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/nu7hatch/gouuid"
 	"os"
 	"os/exec"
 	"regexp"
@@ -97,10 +97,9 @@ var workUp = func(gammu, config, ds string) {
 		if strings.Contains(v, "User Data Header     :") {
 			continue
 		}
-		msgId, _ := uuid.NewV4()
 		queryDb(ds, `INSERT INTO messages SET ID=?,SENDER=?,SENDER_CODE=?,SENDER_NAME=?,
 		RECEIVER=?,RECEIVER_CODE=?,RECEIVER_NAME=?,SUBJECT=?,BODY=?,TIME_CREATED=?,HAS_READ=0,
-		PROPERTIES='{}',CORRELATION_ID=''`, msgId.String(), "-1", "system", "系统",
+		PROPERTIES='{}',CORRELATION_ID=''`, uuid.New(), "-1", "system", "系统",
 			"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
 
 		command := fmt.Sprint(gammu, " -c ", config, "  deletesms 1 ", key)
