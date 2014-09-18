@@ -94,18 +94,15 @@ var workUp = func(gammu, config, ds string) {
 	}()
 	sms := getAllSms(gammu, config)
 	for key, v := range sms {
-		if strings.Contains(v, "User Data Header     :") {
-			continue
-		}
-		queryDb(ds, `INSERT INTO messages SET ID=?,SENDER=?,SENDER_CODE=?,SENDER_NAME=?,
-		RECEIVER=?,RECEIVER_CODE=?,RECEIVER_NAME=?,SUBJECT=?,BODY=?,TIME_CREATED=?,HAS_READ=0,
-		PROPERTIES='{}',CORRELATION_ID=''`, uuid.New(), "-1", "system", "系统",
-			"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
-
 		command := fmt.Sprint(gammu, " -c ", config, "  deletesms 1 ", key)
 		_, err := exec.Command("sh", "-c", command).Output()
 		if err != nil {
 			fmt.Println("Failed to execute:", err, command)
+		} else {
+			queryDb(ds, `INSERT INTO messages SET ID=?,SENDER=?,SENDER_CODE=?,SENDER_NAME=?,
+		RECEIVER=?,RECEIVER_CODE=?,RECEIVER_NAME=?,SUBJECT=?,BODY=?,TIME_CREATED=?,HAS_READ=0,
+		PROPERTIES='{}',CORRELATION_ID=''`, uuid.New(), "-1", "system", "系统",
+				"1184785174974", "FS0001", "福沙科技", "MSG_UP", v, time.Now())
 		}
 	}
 
