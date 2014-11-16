@@ -2,11 +2,9 @@
 package main
 
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"os"
 	"os/exec"
 	"regexp"
@@ -14,6 +12,9 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"code.google.com/p/go-uuid/uuid"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
@@ -186,8 +187,14 @@ var captureSmsLocation = func(s string) int {
 	return ret
 }
 
+var db *sql.DB
+
 var getConn = func(ds string) (*sql.DB, error) {
-	return sql.Open("mysql", ds)
+	if db == nil {
+		db, err := sql.Open("mysql", ds)
+		return db, err
+	}
+	return db, nil
 }
 
 func args() []string {
@@ -210,7 +217,6 @@ var queryDb = func(ds string, sqlStatement string, sqlParams ...interface{}) (re
 		}
 	}()
 	db, err := getConn(ds)
-	defer db.Close()
 	if err != nil {
 		fmt.Println("sql.Open:", err)
 	}
