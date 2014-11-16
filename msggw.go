@@ -191,7 +191,9 @@ var db *sql.DB
 
 var getConn = func(ds string) (*sql.DB, error) {
 	if db == nil {
-		db, err := sql.Open("mysql", ds)
+		ndb, err := sql.Open("mysql", ds)
+		db = ndb
+		fmt.Println("Returning new db")
 		return db, err
 	}
 	return db, nil
